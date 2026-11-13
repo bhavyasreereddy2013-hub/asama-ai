@@ -1,4 +1,5 @@
 import math
+import os
 import re
 from collections.abc import Iterable
 from datetime import datetime
@@ -16,7 +17,10 @@ def get_embedding_model() -> TextEmbedding:
     if _embedding_model is None:
         with _embedding_model_lock:
             if _embedding_model is None:
-                _embedding_model = TextEmbedding(model_name=EMBEDDING_MODEL_NAME)
+                _embedding_model = TextEmbedding(
+                    model_name=EMBEDDING_MODEL_NAME,
+                    cache_dir=os.getenv("FASTEMBED_CACHE_PATH") or None,
+                )
     return _embedding_model
 
 

@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "app/main.py": {
+      "includeFiles": [
+        "app/static/**",
+        "app/templates/**"
+      ],
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "APP_ENV": "production",
+    "SEED_DEMO_DATA": "false",
+    "FASTEMBED_CACHE_PATH": "/tmp/fastembed_cache"
+  }
+}

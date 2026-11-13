@@ -30,7 +30,7 @@ Run the backend tests with:
 python -m pytest -q
 ```
 
-## Deployment preparation
+## Docker deployment preparation
 
 The included Docker setup runs one Uvicorn process, persists the SQLite database and embedding cache in a named volume, runs as a non-root user, and binds to loopback. Put a TLS-terminating reverse proxy in front of it; do not expose the container port directly to the public internet.
 
@@ -51,9 +51,20 @@ Check `http://127.0.0.1:8000/health`. Keep `.env` private and back up the `asama
 
 Production mode requires `JWT_SECRET_KEY` and `DATABASE_URL`, requires a 32-byte minimum JWT key, disables sample-account seeding, and refuses to start if demo seeding is enabled. Start with a new production database; do not promote the local development database, which already contains the sample accounts. For non-container deployment, set `APP_ENV=production`, `JWT_SECRET_KEY`, `DATABASE_URL`, and `SEED_DEMO_DATA=false` in the process environment.
 
+## Vercel deployment
+
+The project is configured for Vercel's FastAPI Python runtime. In Vercel, import this GitHub repository and set its Root Directory to the repository root. Add the following project environment variables for Production (and Preview if previews will be used):
+
+- `DATABASE_URL`: Neon PostgreSQL connection string. Use the pooled connection string and keep its credentials private.
+- `JWT_SECRET_KEY`: a unique secret of at least 32 bytes. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(48))"` and save it directly in Vercel Project Settings.
+
+`APP_ENV=production`, `SEED_DEMO_DATA=false`, a 60-second function limit, and the temporary FastEmbed cache path are configured in `vercel.json`. Vercel's filesystem is temporary: cached model files may be downloaded again on a cold start, and the model download can make the first search slower. User data is stored in Neon, not on the function filesystem. Do not use SQLite for a Vercel deployment.
+
+For a CLI deployment, link the project with `vercel link`, add the two secrets with `vercel env add`, and run `vercel --prod`. The app needs working Vercel and Neon accounts; do not commit provider credentials.
+
 ## MVP operational limits
 
-- SQLite is configured for a small, single-instance deployment; use a planned migration before changing the database schema.
+- SQLite is configured for local development and a small, single-instance Docker deployment; use a planned migration before changing the database schema.
 - The app creates missing tables at startup but does not yet include a schema migration system.
 - Email verification and password recovery are not implemented.
 - Review privacy, retention, and legal requirements before accepting real customer information. Business profiles and published posts are discoverable by other users.
