@@ -1,10 +1,7 @@
 {
   "functions": {
     "app/main.py": {
-      "includeFiles": [
-        "app/static/**",
-        "app/templates/**"
-      ],
+      "includeFiles": "app/**",
       "maxDuration": 60
     }
   },
