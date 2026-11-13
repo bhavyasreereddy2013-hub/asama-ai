@@ -5,7 +5,6 @@
       "maxDuration": 60
     }
   },
-  "installCommand": "pip install -r requirements.txt",
   "env": {
     "APP_ENV": "production",
     "SEED_DEMO_DATA": "false",
