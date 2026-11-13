@@ -1,0 +1,19 @@
+services:
+  asama:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: sqlite:////data/asama.db
+      SEED_DEMO_DATA: "false"
+      FASTEMBED_CACHE_PATH: /data/fastembed_cache
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - asama_data:/data
+    restart: unless-stopped
+
+volumes:
+  asama_data:

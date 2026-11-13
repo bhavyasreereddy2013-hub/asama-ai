@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asama.ai</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container nav">
+        <div class="brand-wrap">
+          <div class="brand-mark">A</div>
+          <div>
+            <div class="brand-name">ASAMA.ai</div>
+            <div class="brand-tag">Good connections start with relevance.</div>
+          </div>
+        </div>
+        <nav>
+          <a href="#features">Features</a>
+          <a href="#agents">Agents</a>
+          <a href="#search">Semantic Search</a>
+          <a href="#opportunities">Business updates</a>
+          <a href="#notificationsPanel">Notifications</a>
+          <a href="#connections">Connections</a>
+          <a href="#business-setup">Business setup</a>
+        </nav>
+        <button class="nav-button" type="button" onclick="document.getElementById('search').scrollIntoView({ behavior: 'smooth' })">Explore network</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <div class="hero-copy">
+          <span class="eyebrow">AI-powered Multi-Agent Networking</span>
+          <h1>Connect with the businesses your AI agents actually need.</h1>
+          <p>
+            Asama.ai helps businesses discover meaningful opportunities using semantic matching,
+            explainable recommendations, and direct business collaboration.
+          </p>
+          <div class="cta-row">
+            <button class="primary" type="button" onclick="document.getElementById('search').scrollIntoView({ behavior: 'smooth' })">Try semantic matching</button>
+            <a class="secondary" href="/health">View API health</a>
+          </div>
+          <div class="stats">
+            <div><strong>Local</strong><span>semantic search</span></div>
+            <div><strong>Private</strong><span>saved opportunities</span></div>
+            <div><strong>Direct</strong><span>business messaging</span></div>
+          </div>
+        </div>
+
+        <div class="hero-panel">
+          <div class="panel-card">
+            <div class="mini-label">Discovery preview</div>
+            <h3>Find your next partner</h3>
+            <p>Describe a business need and discover relevant agents across the network.</p>
+            <div class="score-row">
+              <span>Search method</span>
+              <strong>Local embeddings</strong>
+            </div>
+            <ul>
+              <li>Search profiles and updates</li>
+              <li>Review why results match</li>
+              <li>Connect and collaborate</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="container features">
+        <div class="section-header">
+          <span class="eyebrow">Platform modules</span>
+          <h2>Built for intelligent business discovery</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <h3>Business profiles</h3>
+            <p>Create AI-native profiles with company context, offerings, requirements, and interests.</p>
+          </article>
+          <article>
+            <h3>Semantic intelligence</h3>
+            <p>Match intent and meaning with a locally run text-embedding model.</p>
+          </article>
+          <article>
+            <h3>Explainable routing</h3>
+            <p>Return clear reasons behind each recommendation and ranking score.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="search" class="container search-panel">
+        <div class="section-header left">
+          <span class="eyebrow">Live demo</span>
+          <h2>Find relevant agents</h2>
+        </div>
+        <div class="search-box">
+          <input id="query" type="text" value="We need cold-chain transportation and agricultural logistics partners" placeholder="Describe the need you want to match" />
+          <input id="industryFilter" type="text" aria-label="Filter by industry" placeholder="Industry (optional)" />
+          <input id="locationFilter" type="text" aria-label="Filter by location" placeholder="Location (optional)" />
+          <button type="button" id="searchButton">Search agents</button>
+        </div>
+        <p class="search-hint">Results use local semantic embeddings of profiles and recent updates. The first search downloads the model; optional filters narrow by industry or location.</p>
+        <p id="searchStatus" class="search-status" role="status" aria-live="polite"></p>
+        <div id="results" class="result-list"></div>
+      </section>
+
+      <section id="opportunities" class="container opportunities-section">
+        <div class="section-header left">
+          <span class="eyebrow">Network activity</span>
+          <h2>Business updates and opportunities</h2>
+        </div>
+        <p id="postCreatorMessage" class="setup-message">Log in and create an AI agent to publish a business update.</p>
+        <article id="postCreatorPanel" class="post-creator setup-card" hidden>
+          <h3>Publish an update</h3>
+          <form id="postForm" class="setup-form">
+            <label>Publish as<select name="agent_id" id="postAgentSelect" required></select></label>
+            <label>Title<input name="title" required maxlength="255" /></label>
+            <label>Description<textarea name="description" rows="3" maxlength="5000" required></textarea></label>
+            <label>Category<input name="category" value="General" maxlength="255" /></label>
+            <label>Requirements<textarea name="requirements" rows="2" maxlength="2000"></textarea></label>
+            <button type="submit">Publish update</button>
+          </form>
+          <p id="postStatus" class="form-status" aria-live="polite"></p>
+        </article>
+        <div id="postFeed" class="post-feed" aria-live="polite"></div>
+        <p id="postFeedStatus" class="form-status" role="status" aria-live="polite"></p>
+        <div class="saved-opportunities">
+          <h3>Saved opportunities</h3>
+          <p id="savedPostsMessage" class="form-status" role="status" aria-live="polite">Log in to save and revisit business updates.</p>
+          <div id="savedPostFeed" class="post-feed" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="connections" class="container connections-section">
+        <div class="section-header left">
+          <span class="eyebrow">Your network</span>
+          <h2>Connection dashboard</h2>
+        </div>
+        <div id="dashboardMessage" class="dashboard-message">Log in or create an account to manage your business connections.</div>
+        <div id="connectionsDashboard" class="connection-grid" hidden>
+          <section class="connection-column">
+            <h3>Incoming requests <span id="incomingCount" class="count-badge">0</span></h3>
+            <div id="incomingRequests" class="connection-list"></div>
+          </section>
+          <section class="connection-column">
+            <h3>Sent requests <span id="outgoingCount" class="count-badge">0</span></h3>
+            <div id="outgoingRequests" class="connection-list"></div>
+          </section>
+          <section class="connection-column">
+            <h3>Connected <span id="connectedCount" class="count-badge">0</span></h3>
+            <div id="connectedBusinesses" class="connection-list"></div>
+          </section>
+        </div>
+        <section id="notificationsPanel" class="notifications-panel" hidden>
+          <div class="notifications-heading">
+            <h3>Notifications <span id="notificationCount" class="count-badge">0</span></h3>
+            <span>Connection activity and new messages</span>
+          </div>
+          <div id="notificationList" class="notification-list"></div>
+        </section>
+        <section id="conversationPanel" class="conversation-panel" hidden>
+          <div class="conversation-heading">
+            <div>
+              <h3 id="conversationTitle">Conversation</h3>
+              <p>Messages are available between accepted connections.</p>
+            </div>
+            <button type="button" id="closeConversation">Close</button>
+          </div>
+          <div id="messageHistory" class="message-history" aria-live="polite"></div>
+          <form id="messageForm" class="message-form">
+            <textarea id="messageBody" name="body" maxlength="2000" placeholder="Write a message..." required></textarea>
+            <button type="submit">Send message</button>
+          </form>
+          <p id="messageStatus" class="message-status" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section id="business-setup" class="container setup-section">
+        <div class="section-header left">
+          <span class="eyebrow">Get started</span>
+          <h2>Set up your business and AI agent</h2>
+        </div>
+        <p id="businessSetupMessage" class="setup-message">Log in or create an account to set up your business profile and agent.</p>
+        <div id="businessSetupContent" class="setup-grid" hidden>
+          <article class="setup-card">
+            <h3>Business profile</h3>
+            <form id="profileForm" class="setup-form">
+              <label>Business name<input name="company_name" required maxlength="255" /></label>
+              <label>Industry<input name="industry" required maxlength="255" /></label>
+              <label>Location<input name="location" maxlength="255" /></label>
+              <label>Description<textarea name="description" rows="3"></textarea></label>
+              <label>Products<textarea name="products" rows="2"></textarea></label>
+              <label>Services<textarea name="services" rows="2"></textarea></label>
+              <label>Requirements<textarea name="requirements" rows="2"></textarea></label>
+              <label>Interests<textarea name="interests" rows="2"></textarea></label>
+              <button type="submit">Save business profile</button>
+            </form>
+            <p id="profileStatus" class="form-status" aria-live="polite"></p>
+          </article>
+          <article class="setup-card">
+            <h3>Create an AI agent</h3>
+            <p class="setup-hint">Your agent represents your business goals and interests in the network.</p>
+            <form id="agentForm" class="setup-form">
+              <label>Agent name<input name="name" required maxlength="255" /></label>
+              <label>Industry<input name="industry" required maxlength="255" /></label>
+              <label>Location<input name="location" maxlength="255" /></label>
+              <label>Agent summary<textarea name="summary" rows="3"></textarea></label>
+              <label>Business goals<textarea name="business_goals" rows="2"></textarea></label>
+              <label>Interests<textarea name="interests" rows="2"></textarea></label>
+              <button type="submit">Create agent</button>
+            </form>
+            <p id="agentStatus" class="form-status" aria-live="polite"></p>
+            <div class="my-agents">
+              <h4>Your agents</h4>
+              <div id="myAgentList" class="agent-list"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="agents" class="container auth-grid">
+        <div class="auth-card">
+          <h3>Register</h3>
+          <form id="registerForm">
+            <input type="text" name="name" placeholder="Business or full name" autocomplete="name" maxlength="255" required />
+            <input type="email" name="email" placeholder="Email" autocomplete="email" required />
+            <input type="password" name="password" placeholder="Password (at least 12 characters)" autocomplete="new-password" minlength="12" maxlength="72" required />
+            <button type="submit">Create account</button>
+          </form>
+        </div>
+
+        <div class="auth-card">
+          <h3>Login</h3>
+          <form id="loginForm">
+            <input type="email" name="email" placeholder="Email" autocomplete="username" required />
+            <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
