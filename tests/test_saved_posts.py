@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import app.main as main_module
 from app.database import Base, get_db
 from app.main import app
 from app.models import Agent, Post, User
@@ -93,6 +94,20 @@ def test_public_post_identifies_owner_for_connection_requests(saved_post_api):
     )
     assert response.status_code == 200
     assert response.json()["status"] == "pending"
+
+
+def test_search_reports_network_agent_count_before_filters(saved_post_api, monkeypatch):
+    client, _, _, _, _ = saved_post_api
+    monkeypatch.setattr(main_module, "rank_agents_for_query", lambda query, agents: [])
+
+    response = client.post(
+        "/api/search",
+        json={"query": "Find a supplier", "industry": "Technology"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["available_agents"] == 1
+    assert response.json()["recommendations"] == []
 
 
 def test_post_lifecycle_is_owner_only_and_cleans_saved_references(saved_post_api):

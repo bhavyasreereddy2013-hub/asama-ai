@@ -26,6 +26,10 @@
           <a href="#business-setup">Business setup</a>
         </nav>
         <button class="nav-button" type="button" onclick="document.getElementById('search').scrollIntoView({ behavior: 'smooth' })">Explore network</button>
+        <div id="sessionControls" class="session-controls" hidden>
+          <span id="sessionUserName" class="session-user"></span>
+          <button id="logoutButton" class="nav-button logout-button" type="button">Log out</button>
+        </div>
       </div>
     </header>
 
@@ -53,7 +57,12 @@
           <div class="panel-card">
             <div class="mini-label">Discovery preview</div>
             <h3>Find your next partner</h3>
-            <p>Describe a business need and discover relevant agents across the network.</p>
+            <p>Type what you are looking for and discover relevant businesses across the network.</p>
+            <form id="quickSearchForm" class="quick-search">
+              <label class="sr-only" for="quickQuery">Describe the partner you are looking for</label>
+              <textarea id="quickQuery" rows="3" maxlength="2000" placeholder="For example: We need a cold-chain logistics partner in California" required></textarea>
+              <button type="submit">Find partners</button>
+            </form>
             <div class="score-row">
               <span>Search method</span>
               <strong>Local embeddings</strong>
@@ -93,12 +102,12 @@
           <span class="eyebrow">Live demo</span>
           <h2>Find relevant agents</h2>
         </div>
-        <div class="search-box">
-          <input id="query" type="text" value="We need cold-chain transportation and agricultural logistics partners" placeholder="Describe the need you want to match" />
+        <form id="searchForm" class="search-box">
+          <input id="query" type="text" maxlength="2000" placeholder="Describe the partner or business need you want to match" />
           <input id="industryFilter" type="text" aria-label="Filter by industry" placeholder="Industry (optional)" />
           <input id="locationFilter" type="text" aria-label="Filter by location" placeholder="Location (optional)" />
-          <button type="button" id="searchButton">Search agents</button>
-        </div>
+          <button type="submit" id="searchButton">Search agents</button>
+        </form>
         <p class="search-hint">Results use local semantic embeddings of profiles and recent updates. The first search downloads the model; optional filters narrow by industry or location.</p>
         <p id="searchStatus" class="search-status" role="status" aria-live="polite"></p>
         <div id="results" class="result-list"></div>
@@ -227,6 +236,7 @@
             <input type="password" name="password" placeholder="Password (at least 12 characters)" autocomplete="new-password" minlength="12" maxlength="72" required />
             <button type="submit">Create account</button>
           </form>
+          <p id="registerStatus" class="form-status" role="status" aria-live="polite"></p>
         </div>
 
         <div class="auth-card">
@@ -236,6 +246,7 @@
             <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
             <button type="submit">Login</button>
           </form>
+          <p id="loginStatus" class="form-status" role="status" aria-live="polite"></p>
         </div>
       </section>
     </main>

@@ -9,6 +9,7 @@ let connectionStates = new Map();
 let activeConversationUser = null;
 let savedPostIds = new Set();
 let canManageSavedPosts = false;
+let lastSearchAgentCount = null;
 
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -27,6 +28,12 @@ function showDashboardMessage(message) {
   document.getElementById('conversationPanel').hidden = true;
   document.getElementById('businessSetupContent').hidden = true;
   document.getElementById('postCreatorPanel').hidden = true;
+}
+
+function updateSessionControls(user) {
+  const sessionControls = document.getElementById('sessionControls');
+  sessionControls.hidden = !user;
+  document.getElementById('sessionUserName').textContent = user ? `Signed in as ${user.name}` : '';
 }
 
 function renderConnectionList(elementId, items, emptyMessage, actionButtons = false, messageButtons = false) {
@@ -103,6 +110,7 @@ async function loadDashboard() {
   if (!token) {
     currentUser = null;
     connectionStates = new Map();
+    updateSessionControls(null);
     showDashboardMessage('Log in or create an account to manage your business connections.');
     renderResults(lastSearchResults);
     await loadPosts();
@@ -118,6 +126,7 @@ async function loadDashboard() {
   if (!userResponse.ok || !connectionsResponse.ok || !notificationsResponse.ok) {
     formHelpers.clearToken();
     currentUser = null;
+    updateSessionControls(null);
     showDashboardMessage('Your session expired. Please log in again.');
     document.getElementById('businessSetupMessage').textContent = 'Log in or create an account to set up your business profile and agent.';
     renderResults(lastSearchResults);
@@ -126,6 +135,7 @@ async function loadDashboard() {
   }
 
   currentUser = await userResponse.json();
+  updateSessionControls(currentUser);
   const data = await connectionsResponse.json();
   const notificationData = await notificationsResponse.json();
   updateConnectionStates(data);
@@ -497,7 +507,12 @@ function renderResults(items) {
   const el = document.getElementById('results');
 
   if (!items || !items.length) {
-    el.innerHTML = '<div class="result-card"><h4>No relevant agents found.</h4><p>Try a broader business requirement.</p></div>';
+    const emptyMessage = lastSearchAgentCount === 0
+      ? 'No business agents have joined the network yet. Create an account and add an AI agent to become discoverable.'
+      : lastSearchAgentCount === null
+        ? 'Describe a business need above to discover potential partners.'
+        : 'No partners matched this search. Try different keywords or remove filters.';
+    el.innerHTML = `<div class="result-card"><h4>No partner matches yet.</h4><p>${emptyMessage}</p></div>`;
     return;
   }
 
@@ -560,14 +575,18 @@ async function runSearch() {
     }
 
     lastSearchResults = data.recommendations;
+    lastSearchAgentCount = Number.isInteger(data.available_agents) ? data.available_agents : null;
     renderResults(lastSearchResults);
     status.dataset.state = 'success';
     status.textContent = lastSearchResults.length
       ? `Ranked ${lastSearchResults.length} agent${lastSearchResults.length === 1 ? '' : 's'}.`
-      : 'No relevant agents found. Try a broader business need.';
+      : lastSearchAgentCount === 0
+        ? 'No business agents are registered yet. Create an AI agent to join the network.'
+        : 'No relevant agents found. Try broader keywords or remove filters.';
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected search error.';
     lastSearchResults = [];
+    lastSearchAgentCount = null;
     document.getElementById('results').replaceChildren();
     status.dataset.state = 'error';
     status.textContent = `Search failed: ${message}`;
@@ -577,7 +596,16 @@ async function runSearch() {
   }
 }
 
-document.getElementById('searchButton').addEventListener('click', runSearch);
+document.getElementById('searchForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  runSearch();
+});
+document.getElementById('quickSearchForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  document.getElementById('query').value = document.getElementById('quickQuery').value.trim();
+  document.getElementById('search').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  runSearch();
+});
 document.getElementById('postFeed').addEventListener('click', handleSavedPostToggle);
 document.getElementById('savedPostFeed').addEventListener('click', handleSavedPostToggle);
 document.getElementById('postFeed').addEventListener('click', handlePostCardAction);
@@ -585,46 +613,84 @@ document.getElementById('savedPostFeed').addEventListener('click', handlePostCar
 document.getElementById('postFeed').addEventListener('submit', handlePostEdit);
 document.getElementById('savedPostFeed').addEventListener('submit', handlePostEdit);
 
-document.getElementById('registerForm').addEventListener('submit', async (event) => {
+async function handleAuthSubmit(event, endpoint, statusId, loadingMessage, successMessage) {
   event.preventDefault();
   const form = event.currentTarget;
+  const status = document.getElementById(statusId);
+  const submitButton = form.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton.textContent;
   const payload = Object.fromEntries(new FormData(form).entries());
 
-  const response = await fetch('/api/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+  submitButton.disabled = true;
+  submitButton.textContent = loadingMessage;
+  status.dataset.state = 'loading';
+  status.textContent = loadingMessage;
 
-  const data = await response.json();
-  if (response.ok) {
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('The server returned an invalid response. Please try again.');
+    }
+
+    if (!response.ok) {
+      const detail = data && typeof data.detail === 'string'
+        ? data.detail
+        : data && Array.isArray(data.detail)
+          ? data.detail.map((issue) => issue.msg).filter(Boolean).join(' ')
+          : '';
+      throw new Error(detail || `Request failed (${response.status}).`);
+    }
+    if (typeof data.access_token !== 'string' || !data.access_token) {
+      throw new Error('The server did not return a valid sign-in token.');
+    }
+
     formHelpers.setToken(data.access_token);
     form.reset();
-    await loadDashboard();
-  } else {
-    alert(data.detail || 'Registration failed');
+    status.dataset.state = 'success';
+    status.textContent = successMessage;
+    try {
+      await loadDashboard();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected error.';
+      status.dataset.state = 'error';
+      status.textContent = `You are signed in, but your account details could not be loaded. ${message}`;
+    }
+    document.getElementById('business-setup').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unexpected error.';
+    status.dataset.state = 'error';
+    status.textContent = message;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalButtonText;
   }
+}
+
+document.getElementById('registerForm').addEventListener('submit', (event) => {
+  handleAuthSubmit(
+    event,
+    '/api/register',
+    'registerStatus',
+    'Creating account...',
+    'Account created. Your business setup is ready below.',
+  );
 });
 
-document.getElementById('loginForm').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const payload = Object.fromEntries(new FormData(form).entries());
-
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await response.json();
-  if (response.ok) {
-    formHelpers.setToken(data.access_token);
-    form.reset();
-    await loadDashboard();
-  } else {
-    alert(data.detail || 'Login failed');
-  }
+document.getElementById('loginForm').addEventListener('submit', (event) => {
+  handleAuthSubmit(
+    event,
+    '/api/login',
+    'loginStatus',
+    'Logging in...',
+    'You are logged in. Your dashboard is ready below.',
+  );
 });
 
 document.getElementById('profileForm').addEventListener('submit', async (event) => {
@@ -803,9 +869,21 @@ document.getElementById('messageForm').addEventListener('submit', async (event) 
   await openConversation(activeConversationUser, document.getElementById('conversationTitle').textContent.replace('Conversation with ', ''));
 });
 
+document.getElementById('logoutButton').addEventListener('click', async () => {
+  formHelpers.clearToken();
+  currentUser = null;
+  connectionStates = new Map();
+  updateSessionControls(null);
+  document.getElementById('loginStatus').textContent = 'You have been logged out.';
+  document.getElementById('loginStatus').dataset.state = 'success';
+  document.getElementById('registerStatus').textContent = '';
+  await loadDashboard();
+  document.getElementById('agents').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 window.addEventListener('DOMContentLoaded', () => {
-  const defaultQuery = 'We need cold-chain transportation and agricultural logistics partners';
-  document.getElementById('query').value = defaultQuery;
+  updateSessionControls(null);
+  document.getElementById('searchStatus').textContent = 'Describe what you need above and select Find partners to search.';
+  document.getElementById('results').replaceChildren();
   loadDashboard();
-  runSearch();
 });

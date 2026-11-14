@@ -11,6 +11,21 @@
   --shadow: rgba(3, 7, 18, 0.35);
 }
 
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-user {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.logout-button {
+  white-space: nowrap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -103,7 +118,8 @@ nav {
 .primary,
 .secondary,
 .search-box button,
-.auth-card button {
+.auth-card button,
+.quick-search button {
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -113,7 +129,8 @@ nav {
 .nav-button,
 .primary,
 .search-box button,
-.auth-card button {
+.auth-card button,
+.quick-search button {
   background: linear-gradient(135deg, var(--primary), var(--primary-soft));
   color: #041421;
   padding: 0.9rem 1.35rem;
@@ -228,6 +245,47 @@ button:hover {
 .panel-card p {
   color: var(--muted);
   line-height: 1.7;
+}
+
+.quick-search {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.quick-search textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: rgba(5, 9, 16, 0.5);
+  color: var(--text);
+  font: inherit;
+}
+
+.quick-search textarea:focus,
+.search-box input:focus,
+.auth-card input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.quick-search button {
+  justify-self: start;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .score-row {
@@ -816,6 +874,14 @@ button:hover {
   min-height: 1.3em;
   margin-bottom: 0;
   font-size: 0.85rem;
+}
+
+.form-status[data-state="error"] {
+  color: #ff9a9a;
+}
+
+.form-status[data-state="success"] {
+  color: var(--primary-soft);
 }
 
 .my-agents {

@@ -417,6 +417,7 @@ def semantic_search(payload: SearchRequest, db: Session = Depends(get_db)):
         )
         .all()
     )
+    available_agents = len(agents)
     if payload.industry:
         industry = payload.industry.casefold()
         agents = [
@@ -443,6 +444,7 @@ def semantic_search(payload: SearchRequest, db: Session = Depends(get_db)):
     return {
         "query": payload.query,
         "filters": {"industry": payload.industry, "location": payload.location},
+        "available_agents": available_agents,
         "recommendations": result,
     }
 
